@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Mistake That Made Me a Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400;1,600&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+
+:root{
+  --bg:    #0C0A08;
+  --ink:   #EDE8DF;
+  --mid:   #8A8278;
+  --muted: #5C5650;
+  --faint: #2A2520;
+  --terra: #BF4F2C;
+  --blue:  #2E5FA3;
+  --green: #2A7A52;
+  --red:   #A63228;
+}
+
+html,body{
+  background:var(--bg);
+  color:var(--ink);
+  height:100%;
+  overflow:hidden;
+  font-family:'DM Sans',-apple-system,BlinkMacSystemFont,'Helvetica Neue',sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ── Story root ── */
+#story{
+  position:relative;
+  width:100vw;
+  height:100vh;
+  overflow:hidden;
+}
+
+/* ── Progress track + bar ── */
+#prog-track{
+  position:absolute;
+  top:0;left:0;right:0;
+  height:2px;
+  background:#181410;
+  z-index:50;
+}
+#prog{
+  height:100%;
+  background:var(--terra);
+  width:0%;
+  transition:width 0.55s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* ── Screens ── */
+.screen{
+  position:absolute;
+  inset:0;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:60px 72px 84px;
+  opacity:0;
+  transform:translateY(16px);
+  transition:opacity 0.6s ease,transform 0.6s ease;
+  pointer-events:none;
+}
+.screen.active{
+  opacity:1;
+  transform:translateY(0);
+  pointer-events:all;
+}
+
+/* ── Cover ── */
+.cover{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  text-align:center;
+  max-width:580px;
+}
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(14px);}
+  to  {opacity:1;transform:translateY(0);}
+}
+.cover .eyebrow  {animation:fadeUp 0.8s ease 0.15s both;}
+.cover .c-title  {animation:fadeUp 0.9s ease 0.45s both;}
+.cover .c-sub    {animation:fadeUp 0.8s ease 0.85s both;}
+.cover .begin-btn{animation:fadeUp 0.7s ease 1.2s  both;}
+
+.eyebrow{
+  font-size:9.5px;font-weight:500;letter-spacing:0.22em;
+  text-transform:uppercase;color:var(--terra);margin-bottom:44px;
+}
+.c-title{
+  font-family:'Cormorant Garamond',Georgia,serif;
+  font-size:clamp(44px,6.2vw,70px);font-weight:300;
+  line-height:1.08;letter-spacing:-0.025em;
+  color:var(--ink);margin-bottom:22px;
+}
+.c-sub{
+  font-family:'Cormorant Garamond',Georgia,serif;
+  font-size:19px;font-style:italic;font-weight:400;
+  line-height:1.65;color:var(--mid);max-width:420px;margin-bottom:52px;
+}
+.begin-btn{
+  background:none;border:1px solid var(--terra);color:var(--terra);
+  font-family:'DM Sans',sans-serif;font-size:10px;font-weight:500;
+  letter-spacing:0.18em;text-transform:uppercase;
+  padding:14px 34px;cursor:pointer;outline:none;
+  transition: background 0.4s ease-out, color 0.4s ease-out;
+}
+.begin-btn:hover{background:var(--terra);color:var(--bg);}
+
+/* ── Step grid ── */
+.step-grid{
+  display:grid;
+  grid-template-columns:160px 1fr;
+  gap:52px;
+  max-width:860px;width:100%;
+  align-items:start;
+}
+.step-left{padding-top:4px;}
+
+@keyframes drift{
+  0%,100%{transform:translateY(0);}
+  50%{transform:translateY(-6px);}
+}
+.step-num{
+  font-family:'Cormorant Garamond',Georgia,serif;
+  font-size:108px;font-weight:300;line-height:1;
+  letter-spacing:-0.04em;color:#1E1B18;
+  margin-bottom:20px;display:block;
+  animation:drift 9s ease-in-out infinite;
+}
+.step-bar{width:28px;height:1.5px;margin-bottom:14px;}
+.step-tag{font-size:8.5px;font-weight:500;letter-spacing:0.24em;text-transform:uppercase;}
+.step-title{
+  font-family:'Cormorant Garamond',Georgia,serif;
+  font-size:clamp(21px,2.7vw,30px);font-weight:400;
+  line-height:1.28;letter-spacing:-0.01em;
+  color:var(--ink);margin-bottom:26px;
+}
+.step-body{
+  font-size:13.5px;font-weight:300;line-height:1.88;color:var(--mid);
+  max-height:360px;overflow-y:auto;
+  scrollbar-width:none;-ms-overflow-style:none;
+  mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 90%, transparent 100%);
+  padding-right:4px;
+  border-right: 1px solid rgba(237, 232, 223, 0.05);
+  position: relative;
+}
+.scroll-hint {
+  position: absolute; 
+  bottom: 12px; 
+  left: 50%; 
+  transform: translateX(-50%);
+  font-size: 7px; 
+  color: var(--mid); 
+  opacity: 0; 
+  letter-spacing: 0.15em; 
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+  z-index: 10;
+}
+.scroll-hint.visible { opacity: 0.5; }
+.step-body::-webkit-scrollbar{display:none;}
+.step-body p{margin-bottom:15px;}
+.step-body p:last-child{margin-bottom:0;}
+.step-body strong{color:var(--ink);font-weight:500;}
+
+/* ── Chapter 02: iMessage silence ── */
+.chat-block{
+  margin:14px 0 16px;
+  padding:14px 14px 12px;
+  background:#0F0D0B;
+  border:1px solid #1E1B18;
+  border-radius:10px;
+}
+.chat-bub{
+  background:#1A3D72;color:#C4D4EE;
+  font-size:11.5px;font-weight:300;line-height:1.5;
+  padding:7px 11px;border-radius:14px 14px 3px 14px;
+  margin-bottom:3px;
+  margin-left:auto;
+  max-width:82%;width:fit-content;display:block;
+}
+.chat-st{
+  font-size:9.5px;color:#3A3530;
+  text-align:right;margin-bottom:10px;padding-right:2px;
+}
+.chat-st:last-of-type{margin-bottom:8px;}
+.chat-silence{
+  font-size:11px;font-style:italic;
+  color:var(--terra);text-align:center;
+  margin-top:6px;letter-spacing:0.04em;
+}
+
+/* ── Chapter 04: Breaking point glow ── */
+#s4-glow{
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse at 50% 100%,rgba(100,18,8,0.22) 0%,transparent 68%);
+  opacity:0;
+  transition:opacity 2.2s ease;
+  pointer-events:none;z-index:0;
+}
+#s4-glow.on{opacity:1;}
+.s4-content{position:relative;z-index:1;width:100%;}
+
+/* Chapter 04 messages */
+.msgs-block{
+  margin:16px 0 18px;
+  padding-left:18px;
+  border-left:1.5px solid var(--red);
+}
+.msg-line{
+  font-family:'Cormorant Garamond',Georgia,serif;
+  font-size:18px;font-style:italic;font-weight:400;
+  color:var(--ink);margin-bottom:8px;
+  opacity:0;transform:translateX(-6px);
+  transition:opacity 0.55s ease,transform 0.55s ease;
+}
+.msg-line.show{opacity:1;transform:translateX(0);}
+
+/* ── Chapter 06: paragraph stagger ── */
+.lesson-p{
+  margin-bottom:15px;
+  opacity:0;transform:translateY(7px);
+  transition:opacity 0.7s ease,transform 0.7s ease;
+}
+.lesson-p:last-child{margin-bottom:0;}
+.lesson-p.show{opacity:1;transform:translateY(0);}
+
+/* ── Closing screen ── */
+.closing-wrap{
+  max-width:500px;width:100%;
+  display:flex;flex-direction:column;align-items:flex-start;
+}
+.closing-label{
+  font-size:8px;letter-spacing:0.26em;text-transform:uppercase;
+  color:var(--muted);margin-bottom:38px;
+}
+.close-item{
+  margin-bottom:26px;
+  opacity:0;transform:translateY(8px);
+  transition:opacity 0.65s ease,transform 0.65s ease;
+}
+.close-item.show{opacity:1;transform:translateY(0);}
+.close-bar{height:1.5px;width:30px;margin-bottom:11px;}
+.close-title{
+  font-family:'Cormorant Garamond',Georgia,serif;
+  font-size:23px;font-weight:400;font-style:italic;
+  color:var(--ink);margin-bottom:8px;line-height:1.2;
+}
+.close-body{
+  font-size:12px;font-weight:300;
+  line-height:1.82;color:var(--muted);
+}
+.close-coda{
+  margin-top:16px;padding-top:22px;
+  border-top:1px solid #221F1C;
+  width:100%;
+  opacity:0;transform:translateY(6px);
+  transition:opacity 0.8s ease,transform 0.8s ease;
+}
+.close-coda.show{opacity:1;transform:translateY(0);}
+.close-coda-text{
+  font-family:'Cormorant Garamond',Georgia,serif;
+  font-size:16px;font-style:italic;font-weight:300;
+  color:#4E4840;line-height:1.75;
+}
+
+/* ── Progress dots ── */
+#dots{
+  position:absolute;right:26px;top:50%;
+  transform:translateY(-50%);
+  display:flex;flex-direction:column;gap:11px;
+  z-index:30;
+}
+.dot{
+  width:5px;height:5px;border-radius:50%;
+  background:#2A2520;cursor:pointer;
+  border:none;padding:0;outline:none;
+  transition:background 0.3s,transform 0.3s;
+}
+.dot.on{background:var(--terra);transform:scale(1.5);}
+.dot:hover:not(.on) {
+  background: var(--muted);
+  transform: scale(1.2);
+}
+
+/* ── Nav ── */
+#nav{
+  position:absolute;bottom:26px;left:0;right:0;
+  display:flex;align-items:center;justify-content:center;
+  gap:30px;z-index:30;
+}
+.nbtn{
+  background:none;border:none;color:#3A3530;
+  font-size:18px;cursor:pointer;
+  padding:8px 12px;outline:none;
+  font-family:serif;line-height:1;
+  transition:color 0.25s;
+}
+.nbtn:hover{color:var(--terra);}
+.nbtn:disabled{opacity:0.14;cursor:default;pointer-events:none;}
+#nav-label{
+  font-size:9.5px;font-weight:500;letter-spacing:0.14em;
+  text-transform:uppercase;color:#3A3530;
+  min-width:130px;text-align:center;
+}
+
+/* ── Mobile ── */
+@media(max-width:640px){
+  .screen{padding:40px 28px 72px;}
+  .step-grid{grid-template-columns:1fr;gap:14px;}
+  .step-num{font-size:64px;margin-bottom:8px;}
+  .c-title{font-size:38px;}
+  .closing-wrap{max-width:100%;}
+}
+</style>
+</head>
+<body>
+<div id="story">
+
+  <div id="prog-track"><div id="prog"></div></div>
+  <div id="dots"></div>
+
+  <!-- 0: Cover -->
+  <div id="s0" class="screen active">
+    <div class="cover">
+      <p class="eyebrow">Apple Foundation Program &nbsp;&middot;&nbsp; Selection Activity</p>
+      <h1 class="c-title">The Mistake That<br>Made Me a Builder.</h1>
+      <p class="c-sub">I thought I was solving a housing problem. I did not realise I was learning about trust.</p>
+      <button class="begin-btn" id="begin-btn">Begin &rarr;</button>
+    </div>
+  </div>
+
+  <!-- 1: The Arrival -->
+  <div id="s1" class="screen">
+    <div class="step-grid">
+      <div class="step-left">
+        <span class="step-num">01</span>
+        <div class="step-bar" style="background:var(--blue);"></div>
+        <p class="step-tag" style="color:var(--blue);">The Arrival</p>
+      </div>
+      <div>
+        <h2 class="step-title">Three months of searching from the wrong side of the world</h2>
+        <div class="step-body">
+          <p>For nearly three months before arriving in Melbourne, my evenings followed the same routine. Classes in India during the day, then hours spent online: browsing listings, messaging agents who would never reply, asking distant relatives I barely knew to inspect apartments on my behalf. The time zone made everything harder. By the time I got a response, the apartment was usually gone.</p>
+          <p>Some agents stopped replying the moment they realised I was overseas. Others asked for in-person inspections I could not attend, documents I did not have, and guarantors I did not know. One week, three near-confirmations fell through in five days.</p>
+          <p>I was not just stressed. I was genuinely scared. Scared of arriving in a new country with nowhere to go.</p>
+          <p>I eventually secured a place. But I paid far more than I should have, because I had run out of energy to keep searching. Having somewhere to stay felt more important than paying the right price. At the time, I thought I was just unlucky.</p>
+          <div class="scroll-hint">SCROLL ↓</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2: Red Flags -->
+  <div id="s2" class="screen">
+    <div class="step-grid">
+      <div class="step-left">
+        <span class="step-num">02</span>
+        <div class="step-bar" style="background:var(--terra);"></div>
+        <p class="step-tag" style="color:var(--terra);">The Red Flags</p>
+      </div>
+      <div>
+        <h2 class="step-title">I knew something was wrong.<br>I agreed anyway.</h2>
+        <div class="step-body">
+          <p>When my friend and I were close to signing a lease, communication from the landlord stopped completely for nearly two weeks. No calls answered. No messages returned. What made it more unsettling: when I reached out from a different account, I would get a reply. The moment she realised it was me, silence again.</p>
+          <div class="chat-block" id="chat-block">
+            <span class="chat-bub">Is the apartment still available?</span>
+            <p class="chat-st">Delivered</p>
+            <span class="chat-bub">Just following up. Please let me know.</span>
+            <p class="chat-st">Delivered</p>
+            <span class="chat-bub">I arrive in three weeks. I need to confirm this.</span>
+            <p class="chat-st">Delivered</p>
+            <p class="chat-silence">Two weeks. No reply.</p>
+          </div>
+          <p>When she finally reappeared, the apartment had changed. Smaller. Same price. My instincts were telling me to walk away. But I was booking from overseas, with almost no alternatives and a flight arriving in weeks. My friend kept saying: at least we will have somewhere to go. So I agreed.</p>
+          <p>At the end of our lease, we spent two days deep-cleaning everything. The morning after handover, already back in India, a $560 cleaning demand arrived. The reason: an Airbnb guest was arriving the next day, during what was still our lease period. Exhausted and overseas, we paid to end the dispute.</p>
+          <p>Later, the landlord apologised and asked if we would like to keep working together. I said yes.</p>
+          <p><strong>That was the real mistake.</strong> Not the first red flag. Staying after I had already seen the pattern clearly.</p>
+          <div class="scroll-hint">SCROLL ↓</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3: The Mission -->
+  <div id="s3" class="screen">
+    <div class="step-grid">
+      <div class="step-left">
+        <span class="step-num">03</span>
+        <div class="step-bar" style="background:var(--green);"></div>
+        <p class="step-tag" style="color:var(--green);">The Mission</p>
+      </div>
+      <div>
+        <h2 class="step-title">It stopped being about my apartment a long time ago</h2>
+        <div class="step-body">
+          <p>After I arrived and started talking to other students, I realised how many people had been through worse. Some were still in Airbnbs weeks after landing. Others had been scattered across the city because coordinating group housing had become difficult.</p>
+          <p>At BITS Pilani, the senior-junior culture is extremely strong. I had spent a full year on campus alongside many of the juniors who would later make this same move. We had eaten lunch together, complained about exams, talked about what Melbourne would be like. I knew exactly how anxious that transition felt, because I had just lived through it myself. These were not strangers arriving in Melbourne. They were people I had already spent a year with back in India.</p>
+          <p>Eventually, students in my own batch started reaching out for help. I remember a frantic 2:00 AM WhatsApp message from someone in my batch who had broken their bond and could not find another place to stay. The panic in those messages stayed with me. A few students told me I was the last person they had contacted after exhausting every other option.</p>
+          <p>I was a mechanical engineering student. No training in property. No real estate background. Nobody else was doing it, though. And I understood the problem from the inside.</p>
+          <div class="scroll-hint">SCROLL ↓</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 4: Breaking Point -->
+  <div id="s4" class="screen">
+    <div id="s4-glow"></div>
+    <div class="s4-content step-grid">
+      <div class="step-left">
+        <span class="step-num">04</span>
+        <div class="step-bar" style="background:var(--red);"></div>
+        <p class="step-tag" style="color:var(--red);">The Breaking Point</p>
+      </div>
+      <div>
+        <h2 class="step-title">The juniors had already booked. And my earlier recommendations had helped make that happen.</h2>
+        <div class="step-body">
+          <p>When I came back to Melbourne after the semester break, prices had gone up by nearly 40%. The original idea of helping students get fair-value accommodation had turned into something I no longer agreed with. The landlord offered me a commission for every student I referred.</p>
+          <p>Through the students I had previously helped, her brochures had already circulated widely among incoming juniors. People I knew personally. People who trusted information because it had come through students they already knew. Many had already paid bonds.</p>
+          <p>Then the messages started arriving.</p>
+          <div class="msgs-block">
+            <p class="msg-line" id="m1">"Did I make the right call?"</p>
+            <p class="msg-line" id="m2">"Is it actually okay?"</p>
+            <p class="msg-line" id="m3">"Will I be alright when I get there?"</p>
+          </div>
+          <p>I did not know what to say. The pricing was not fair. But telling them that now, after they had already committed, would only cause panic without solving anything.</p>
+          <p>I had started this because I wanted students to feel less alone. Somehow, I had become the person who let them walk into something I should have seen coming.</p>
+          <div class="scroll-hint">SCROLL ↓</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5: The Rebuild -->
+  <div id="s5" class="screen">
+    <div class="step-grid">
+      <div class="step-left">
+        <span class="step-num">05</span>
+        <div class="step-bar" style="background:var(--green);"></div>
+        <p class="step-tag" style="color:var(--green);">The Rebuild</p>
+      </div>
+      <div>
+        <h2 class="step-title">Starting over. Not because I had a plan. Because I could not do nothing.</h2>
+        <div class="step-body">
+          <p>I turned down the commission. At the time, I did not think of it as a principled stand. It just felt like the only honest thing to do. Then I started again, slowly, with no real roadmap.</p>
+          <p>I reached out to buildings, agents, and property managers across Melbourne. Most said no. Some did not reply. A few were curious but cautious. I kept going, mostly because stopping felt worse than another rejection.</p>
+          <p>What I gradually learned was that property managers were not opposed to students. They were cautious. They wanted someone local who would actually stay involved and help coordinate things properly. Once they realised I was serious about helping students, conversations became much easier. Most of it was trial and error because I had nobody guiding me through it either.</p>
+          <p>When buildings offered me commissions, I asked them to redirect those savings to students instead. Discounts. Rent-free weeks. Small things that mattered when you were arriving on a tight budget with no safety net.</p>
+          <p>And I wrote a guide. A practical, honest document covering everything I had learned the hard way. Not because it was impressive. Just because I wished it had existed when I arrived.</p>
+          <div class="scroll-hint">SCROLL ↓</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6: The Lesson -->
+  <div id="s6" class="screen">
+    <div class="step-grid">
+      <div class="step-left">
+        <span class="step-num">06</span>
+        <div class="step-bar" style="background:var(--blue);"></div>
+        <p class="step-tag" style="color:var(--blue);">The Lesson</p>
+      </div>
+      <div>
+        <h2 class="step-title">What I actually learned, and what I carry with me now</h2>
+        <div class="step-body" id="lesson-body">
+          <p class="lesson-p">The mistake I made was not one bad decision. It was a pattern of repeatedly staying in a situation my instincts were warning me about, because I was too attached to the idea to step back and see it clearly.</p>
+          <p class="lesson-p">I learned that caring deeply about something is not enough to protect it. Good intentions can still lead to harm when the people around you are not trustworthy. There is a version of optimism that tips into naivety, and the distance between them is almost always clearer in hindsight.</p>
+          <p class="lesson-p">I also learned what it feels like to make a genuinely difficult ethical choice. Not the obvious kind, but the kind where the easier option would have been profitable and you have to sit with the quiet discomfort of not taking it.</p>
+          <p class="lesson-p">Most of all, I learned something about people. The students who reached out were not just looking for apartments. They were looking for someone who had already been through it. Someone who could make the uncertainty feel a little smaller. That is exactly what I had needed when I first arrived.</p>
+          <p class="lesson-p">I came to Melbourne not knowing how anything worked. Somewhere along the way, I made a real mistake, felt the full weight of it, tried to make it right, and built something more careful as a result. That feels like the most honest thing I have.</p>
+          <div class="scroll-hint">SCROLL ↓</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 7: Closing -->
+  <div id="s7" class="screen">
+    <div class="closing-wrap">
+      <p class="closing-label">Three things this taught me</p>
+
+      <div class="close-item" id="ci1">
+        <div class="close-bar" style="background:var(--blue);"></div>
+        <p class="close-title">Trust your instincts.</p>
+        <p class="close-body">Ignoring a bad feeling once is human. Ignoring it repeatedly, because you want something to work, is a choice. I learned the difference between the two.</p>
+      </div>
+
+      <div class="close-item" id="ci2">
+        <div class="close-bar" style="background:var(--red);"></div>
+        <p class="close-title">Ethics over opportunity.</p>
+        <p class="close-body">When the commission came, taking it would have been easy. I chose not to. That decision felt harder than it should have. The discomfort of turning it down taught me something.</p>
+      </div>
+
+      <div class="close-item" id="ci3">
+        <div class="close-bar" style="background:var(--green);"></div>
+        <p class="close-title">People over ideas.</p>
+        <p class="close-body">The best ideas stop mattering when they stop serving the people they were built for. The students were not abstract. They were people I had eaten lunch with.</p>
+      </div>
+
+      <div class="close-coda" id="close-coda">
+        <p class="close-coda-text">I think I am starting to understand what it means to actually help someone.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Nav -->
+  <div id="nav">
+    <button class="nbtn" id="prev-btn" disabled>&larr;</button>
+    <span id="nav-label">Intro</span>
+    <button class="nbtn" id="next-btn">&rarr;</button>
+  </div>
+
+</div>
+<script>
+(function(){
+  var N = 8;
+  var LABELS = ['Intro','01 / The Arrival','02 / The Red Flags','03 / The Mission','04 / The Breaking Point','05 / The Rebuild','06 / The Lesson','Reflection'];
+  var cur = 0;
+  var done = {};
+
+  var dotsEl = document.getElementById('dots');
+  var dots = [];
+  for(var i=0;i<N;i++){
+    var b = document.createElement('button');
+    b.className = 'dot'+(i===0?' on':'');
+    b.setAttribute('aria-label', LABELS[i]);
+    (function(idx){ b.addEventListener('click',function(){ goTo(idx); }); })(i);
+    dotsEl.appendChild(b);
+    dots.push(b);
+  }
+
+  function goTo(n){
+    if(n<0||n>=N) return;
+    document.getElementById('s'+cur).classList.remove('active');
+    dots[cur].classList.remove('on');
+    cur = n;
+    document.getElementById('s'+cur).classList.add('active');
+    dots[cur].classList.add('on');
+    document.getElementById('nav-label').textContent = LABELS[cur];
+    document.getElementById('prev-btn').disabled = cur===0;
+    document.getElementById('next-btn').disabled = cur===N-1;
+    document.getElementById('prog').style.width = (cur/(N-1)*100)+'%';
+    if(!done[cur]){
+      done[cur]=true;
+      if(cur===4) animateMsgs();
+      if(cur===6) animateLesson();
+      if(cur===7) animateClosing();
+    }
+    
+    var body = document.querySelector('#s'+cur+' .step-body');
+    if(body){
+      var hint = body.querySelector('.scroll-hint');
+      if(hint && !body.dataset.hintChecked){
+        body.dataset.hintChecked = 'true';
+        setTimeout(function(){
+          if(body.scrollHeight > body.clientHeight + 5){
+            hint.classList.add('visible');
+            body.addEventListener('scroll', function(){
+              hint.classList.remove('visible');
+            }, {once:true});
+          }
+        }, 150);
+      }
+    }
+  }
+
+  function animateMsgs(){
+    ['m1','m2','m3'].forEach(function(id,i){
+      setTimeout(function(){
+        var el=document.getElementById(id);
+        if(el) el.classList.add('show');
+      }, 550 + i*780);
+    });
+    setTimeout(function(){
+      var g=document.getElementById('s4-glow');
+      if(g) g.classList.add('on');
+    }, 900);
+  }
+
+  function animateLesson(){
+    var ps = document.querySelectorAll('.lesson-p');
+    ps.forEach(function(p,i){
+      setTimeout(function(){ p.classList.add('show'); }, 180 + i*390);
+    });
+  }
+
+  function animateClosing(){
+    ['ci1','ci2','ci3'].forEach(function(id,i){
+      setTimeout(function(){
+        var el=document.getElementById(id);
+        if(el) el.classList.add('show');
+      }, 200 + i*460);
+    });
+    setTimeout(function(){
+      var el=document.getElementById('close-coda');
+      if(el) el.classList.add('show');
+    }, 1700);
+  }
+
+  document.getElementById('next-btn').addEventListener('click',function(){ goTo(cur+1); });
+  document.getElementById('prev-btn').addEventListener('click',function(){ goTo(cur-1); });
+  document.getElementById('begin-btn').addEventListener('click',function(){ goTo(1); });
+
+  document.addEventListener('keydown',function(e){
+    if(e.key==='ArrowRight'||e.key===' '){ e.preventDefault(); goTo(cur+1); }
+    else if(e.key==='ArrowLeft'){ goTo(cur-1); }
+  });
+})();
+</script>
+</body>
+</html>
